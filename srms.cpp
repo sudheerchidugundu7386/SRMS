@@ -122,6 +122,31 @@ void updateStudent(const Student &s) {
     rename("temp.txt", "students.txt");
 }
 
+bool deleteStudentById(const string &id) {
+    ifstream file("students.txt");
+    ofstream temp("temp.txt");
+
+    string line;
+    bool found = false;
+
+    while (getline(file, line)) {
+        Student s = deserialize(line);
+        if (s.id == id) {
+            found = true;   // skip writing → deletes record
+            continue;
+        }
+        temp << line << "\n";
+    }
+
+    file.close();
+    temp.close();
+
+    remove("students.txt");
+    rename("temp.txt", "students.txt");
+
+    return found;
+}
+
 // ====================== GPA CALC ====================================
 void calculateGPA(Student &s) {
     int total = s.markCoding + s.markCPP + s.markDAA;
@@ -342,6 +367,31 @@ void viewAllStudents() {
     }
 }
 
+void deleteStudent() {
+    string id;
+    cout << "Enter Student ID to delete: ";
+    cin >> id;
+
+    Student s;
+    if (!fetchStudent(id, s)) {
+        cout << "Student Not Found!\n";
+        return;
+    }
+
+    char confirm;
+    cout << "\nAre you sure you want to delete this student? (y/n): ";
+    cin >> confirm;
+
+    if (confirm == 'y' || confirm == 'Y') {
+        if (deleteStudentById(id)) {
+            logActivity("ADMIN", "Deleted student " + id);
+            cout << "Student Deleted Successfully!\n";
+        }
+    } else {
+        cout << "Delete Cancelled.\n";
+    }
+}
+
 void exportCSV() {
     ifstream file("students.txt");
     ofstream csv("students_export.csv");
@@ -443,7 +493,8 @@ void adminMenu() {
         showDashboard();
 
         cout << "\n1. Add Student\n2. View All Students\n3. View Single Student\n";
-        cout << "4. Edit Student\n5. Export CSV\n6. Back\n";
+        cout << "4. Edit Student\n5. Delete Student\n6. Export CSV\n7. Back\n";
+
         cout << "Choice: ";
         cin >> c;
 
@@ -453,8 +504,9 @@ void adminMenu() {
         else if (c == 2) viewAllStudents();
         else if (c == 3) viewSingleStudent();
         else if (c == 4) editStudent();
-        else if (c == 5) exportCSV();
-        else if (c == 6) break;
+        else if (c == 5) deleteStudent();
+        else if (c == 6) exportCSV();
+        else if (c == 7) break;
         else cout << "Invalid Choice!\n";
 
         pauseClear();
